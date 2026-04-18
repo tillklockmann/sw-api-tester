@@ -1,0 +1,77 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #1e1e1e;
+  --color-bg-secondary: #252526;
+  --color-bg-panel: #2d2d2d;
+  --color-bg-input: #3c3c3c;
+  --color-bg-hover: #37373d;
+  --color-border: #3e3e3e;
+  --color-text-primary: #d4d4d4;
+  --color-text-secondary: #808080;
+  --color-text-muted: #5a5a5a;
+  --color-accent: #0078d4;
+  --color-accent-hover: #1a8ae8;
+  --color-success: #4ec9b0;
+  --color-warning: #dcdcaa;
+  --color-error: #f44747;
+  --color-info: #569cd6;
+  --color-method-get: #569cd6;
+  --color-method-post: #4ec9b0;
+  --color-method-put: #dcdcaa;
+  --color-method-patch: #ce9178;
+  --color-method-delete: #f44747;
+  --color-status-2xx: #4ec9b0;
+  --color-status-3xx: #dcdcaa;
+  --color-status-4xx: #ce9178;
+  --color-status-5xx: #f44747;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-mono);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+/* CodeMirror overrides */
+.cm-editor {
+  height: 100%;
+  font-family: var(--font-mono) !important;
+  font-size: 13px;
+}
+
+.cm-editor .cm-scroller {
+  font-family: var(--font-mono) !important;
+}
+
+.cm-editor.cm-focused {
+  outline: none;
+}

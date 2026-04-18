@@ -1,0 +1,95 @@
+<script setup lang="ts">
+import { ref, watch } from 'vue'
+import { useOpenApiStore } from '@/stores/openapi'
+import { useRequestStore } from '@/stores/request'
+import { buildSyncPayload } from '@/services/sync-api'
+
+const openapi = useOpenApiStore()
+const request = useRequestStore()
+
+const entity = ref('')
+const action = ref<'upsert' | 'delete'>('upsert')
+const entityFilter = ref('')
+
+const filteredEntities = ref<string[]>([])
+
+watch(
+  [() => openapi.entityNames, entityFilter],
+  () => {
+    const q = entityFilter.value.toLowerCase()
+    filteredEntities.value = openapi.entityNames
+      .filter((name) => name.toLowerCase().includes(q))
+      .slice(0, 30)
+  },
+  { immediate: true },
+)
+
+function apply() {
+  if (!entity.value) return
+  request.path = '/_action/sync'
+  request.method = 'POST'
+  request.body = buildSyncPayload(openapi.fullSpec, entity.value, action.value)
+}
+
+watch([entity, action], () => {
+  if (entity.value) apply()
+})
+</script>
+
+<template>
+  <div class="p-3 space-y-3">
+    <div class="text-xs text-text-secondary font-semibold">Sync API Builder</div>
+
+    <div class="flex gap-2 items-end">
+      <!-- Entity search -->
+      <div class="flex-1">
+        <label class="text-[10px] text-text-muted block mb-1">Entity</label>
+        <input
+          v-model="entityFilter"
+          type="text"
+          placeholder="Search entity..."
+          class="w-full bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono"
+        />
+        <div
+          v-if="entityFilter && filteredEntities.length > 0 && !entity"
+          class="mt-1 max-h-[200px] overflow-auto border border-border rounded bg-bg-secondary"
+        >
+          <button
+            v-for="name in filteredEntities"
+            :key="name"
+            class="w-full text-left px-3 py-1 text-xs font-mono hover:bg-bg-hover text-text-secondary hover:text-text-primary"
+            @click="entity = name; entityFilter = name"
+          >
+            {{ name }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Action -->
+      <div>
+        <label class="text-[10px] text-text-muted block mb-1">Action</label>
+        <div class="flex rounded overflow-hidden border border-border">
+          <button
+            v-for="a in (['upsert', 'delete'] as const)"
+            :key="a"
+            class="px-3 py-1.5 text-xs transition-colors"
+            :class="
+              action === a
+                ? 'bg-accent text-white'
+                : 'bg-bg-panel text-text-secondary hover:text-text-primary hover:bg-bg-hover'
+            "
+            @click="action = a"
+          >
+            {{ a }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="entity" class="text-[10px] text-text-muted">
+      Endpoint: <span class="text-accent">POST /_action/sync</span>
+      &nbsp;|&nbsp; Entity: <span class="text-text-primary">{{ entity }}</span>
+      &nbsp;|&nbsp; Action: <span class="text-text-primary">{{ action }}</span>
+    </div>
+  </div>
+</template>

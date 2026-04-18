@@ -1,0 +1,187 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { useRequestStore } from '@/stores/request'
+import { useConnectionStore } from '@/stores/connection'
+import { useResponseStore } from '@/stores/response'
+import { useHistoryStore } from '@/stores/history'
+import { useShopsStore } from '@/stores/shops'
+import { useSavedRequestsStore } from '@/stores/saved-requests'
+import { executeRequest } from '@/services/api'
+import EndpointSelector from './EndpointSelector.vue'
+import MethodSelector from './MethodSelector.vue'
+import SendButton from './SendButton.vue'
+import JsonEditor from '@/components/common/JsonEditor.vue'
+import TabBar from '@/components/common/TabBar.vue'
+import KeyValueEditor from '@/components/common/KeyValueEditor.vue'
+import SyncApiBuilder from '@/components/convenience/SyncApiBuilder.vue'
+import SearchCriteriaBuilder from '@/components/convenience/SearchCriteriaBuilder.vue'
+import CustomPriceBuilder from '@/components/convenience/CustomPriceBuilder.vue'
+import SaveRequestModal from '@/components/saved/SaveRequestModal.vue'
+import SavedRequestsPanel from '@/components/saved/SavedRequestsPanel.vue'
+import type { SavedRequest } from '@/types/saved-request'
+
+const request = useRequestStore()
+const connection = useConnectionStore()
+const response = useResponseStore()
+const history = useHistoryStore()
+const shops = useShopsStore()
+const savedRequests = useSavedRequestsStore()
+
+const requestTabs = ['Body', 'Headers', 'Params', 'Sync', 'Search', 'Custom Price']
+const activeTab = ref('Body')
+const showSaveModal = ref(false)
+
+async function send() {
+  if (!connection.baseUrl || !request.path) return
+
+  request.isLoading = true
+  response.clear()
+
+  const customHeaders: Record<string, string> = {}
+  for (const h of request.customHeaders) {
+    if (h.key) customHeaders[h.key] = h.value
+  }
+
+  // Build query params
+  let path = request.path
+  const params = request.queryParams.filter((p) => p.key)
+  if (params.length > 0) {
+    const qs = params
+      .map((p) => `${encodeURIComponent(p.key)}=${encodeURIComponent(p.value)}`)
+      .join('&')
+    path += (path.includes('?') ? '&' : '?') + qs
+  }
+
+  try {
+    const result = await executeRequest({
+      baseUrl: connection.baseUrl,
+      path,
+      method: request.method,
+      headers: customHeaders,
+      body: request.method !== 'GET' ? request.body || null : null,
+      apiMode: connection.apiMode,
+      token: connection.token,
+      accessKey: connection.accessKey,
+      contextToken: connection.contextToken,
+    })
+
+    response.setResponse(result.response, result.error)
+
+    if (result.newContextToken) {
+      connection.updateContextToken(result.newContextToken)
+    }
+
+    history.addEntry({
+      id: crypto.randomUUID(),
+      request: result.request,
+      response: result.response,
+      error: result.error,
+    })
+  } finally {
+    request.isLoading = false
+  }
+}
+
+function handleSaveRequest(name: string) {
+  savedRequests.addRequest({
+    name,
+    path: request.path,
+    method: request.method,
+    body: request.body,
+    customHeaders: request.customHeaders.filter((h) => h.key),
+    queryParams: request.queryParams.filter((p) => p.key),
+    originShopId: shops.activeShopId,
+    originBaseUrl: connection.baseUrl,
+    originVersion: connection.version,
+  })
+  showSaveModal.value = false
+}
+
+function handleLoadRequest(saved: SavedRequest) {
+  request.path = saved.path
+  request.method = saved.method
+  request.body = saved.body
+  request.customHeaders = saved.customHeaders.length
+    ? [...saved.customHeaders]
+    : []
+  request.queryParams = saved.queryParams.length
+    ? [...saved.queryParams]
+    : []
+}
+
+function onKeydown(e: KeyboardEvent) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+    e.preventDefault()
+    send()
+  }
+}
+</script>
+
+<template>
+  <div class="flex flex-col h-full" @keydown="onKeydown">
+    <!-- URL bar -->
+    <div class="flex items-center gap-2 p-3 border-b border-border">
+      <MethodSelector v-model="request.method" />
+      <EndpointSelector />
+      <span class="text-text-muted text-xs">or</span>
+      <input
+        v-model="request.path"
+        type="text"
+        placeholder="/custom/path"
+        class="w-[200px] bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono"
+        @keydown.enter.meta="send"
+        @keydown.enter.ctrl="send"
+      />
+      <SavedRequestsPanel @select="handleLoadRequest" />
+      <div class="flex items-center gap-1">
+        <SendButton :loading="request.isLoading" @send="send" />
+        <button
+          class="px-3 py-1.5 text-xs rounded border border-accent text-accent hover:bg-accent/10 transition-colors font-medium"
+          title="Save current request"
+          @click="showSaveModal = true"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+
+    <!-- Request content tabs -->
+    <TabBar :tabs="requestTabs" :active-tab="activeTab" @update:active-tab="activeTab = $event" />
+
+    <div class="flex-1 overflow-auto">
+      <div v-show="activeTab === 'Body'" class="h-full">
+        <JsonEditor v-model="request.body" placeholder="Request body (JSON)..." />
+      </div>
+      <div v-show="activeTab === 'Headers'" class="p-3">
+        <KeyValueEditor
+          v-model="request.customHeaders"
+          key-placeholder="Header name"
+          value-placeholder="Header value"
+        />
+      </div>
+      <div v-show="activeTab === 'Params'" class="p-3">
+        <KeyValueEditor
+          v-model="request.queryParams"
+          key-placeholder="Parameter"
+          value-placeholder="Value"
+        />
+      </div>
+      <div v-show="activeTab === 'Sync'">
+        <SyncApiBuilder />
+      </div>
+      <div v-show="activeTab === 'Search'">
+        <SearchCriteriaBuilder />
+      </div>
+      <div v-show="activeTab === 'Custom Price'">
+        <CustomPriceBuilder />
+      </div>
+    </div>
+
+    <!-- Save modal -->
+    <SaveRequestModal
+      :open="showSaveModal"
+      @close="showSaveModal = false"
+      @save="handleSaveRequest"
+    />
+  </div>
+</template>
