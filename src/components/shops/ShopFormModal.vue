@@ -12,6 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: []
   save: [data: Omit<ShopInstance, 'id' | 'createdAt' | 'updatedAt'>]
+  delete: []
 }>()
 
 const name = ref('')
@@ -20,12 +21,14 @@ const version = ref<ShopwareVersion>('6.7')
 const clientId = ref('')
 const clientSecret = ref('')
 const accessKey = ref('')
+const confirmDelete = ref(false)
 
 const versions: ShopwareVersion[] = ['6.7', '6.6']
 
 watch(
   () => props.open,
   (isOpen) => {
+    confirmDelete.value = false
     if (isOpen && props.shop) {
       name.value = props.shop.name
       baseUrl.value = props.shop.baseUrl
@@ -55,6 +58,14 @@ function handleSave() {
     clientSecret: clientSecret.value.trim(),
     accessKey: accessKey.value.trim(),
   })
+}
+
+function handleDelete() {
+  if (!confirmDelete.value) {
+    confirmDelete.value = true
+    return
+  }
+  emit('delete')
 }
 
 const inputClass =
@@ -143,6 +154,20 @@ const inputClass =
     </form>
 
     <template #footer>
+      <!-- Delete button (only in edit mode) -->
+      <button
+        v-if="shop"
+        class="px-4 py-1.5 text-xs rounded font-medium transition-colors mr-auto"
+        :class="
+          confirmDelete
+            ? 'bg-error text-white hover:bg-error/80'
+            : 'bg-error/20 text-error hover:bg-error/30'
+        "
+        @click="handleDelete"
+      >
+        {{ confirmDelete ? 'Confirm Delete' : 'Delete Shop' }}
+      </button>
+
       <button
         class="px-4 py-1.5 text-xs rounded text-text-secondary hover:text-text-primary transition-colors"
         @click="emit('close')"

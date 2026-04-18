@@ -1,12 +1,15 @@
+export type CustomPriceAction = 'upsert' | 'delete'
+
 export interface CustomPriceEntry {
+  action: CustomPriceAction
   productId: string
   customerId: string
   customerGroupId: string
   ruleId: string
-  prices: CustomPriceRow[]
+  priceTiers: CustomPriceTier[]
 }
 
-export interface CustomPriceRow {
+export interface CustomPriceTier {
   quantityStart: number
   quantityEnd: number | null
   currencyId: string
@@ -16,44 +19,54 @@ export interface CustomPriceRow {
 }
 
 export function buildCustomPricePayload(entry: CustomPriceEntry): string {
-  const priceArray = entry.prices.map((p) => ({
-    quantityStart: p.quantityStart,
-    ...(p.quantityEnd !== null ? { quantityEnd: p.quantityEnd } : {}),
+  // Build the inner payload object
+  const payloadItem: Record<string, unknown> = {
+    productId: entry.productId || '00000000-0000-0000-0000-000000000000',
+  }
+
+  if (entry.customerId) {
+    payloadItem.customerId = entry.customerId
+  }
+  if (entry.customerGroupId) {
+    payloadItem.customerGroupId = entry.customerGroupId
+  }
+  if (entry.ruleId) {
+    payloadItem.ruleId = entry.ruleId
+  }
+
+  // Build price tiers — each tier has a nested "price" array with currency details
+  payloadItem.price = entry.priceTiers.map((tier) => ({
+    quantityStart: tier.quantityStart,
+    ...(tier.quantityEnd !== null ? { quantityEnd: tier.quantityEnd } : {}),
     price: [
       {
-        currencyId: p.currencyId || '00000000-0000-0000-0000-000000000000',
-        gross: p.gross,
-        net: p.net,
-        linked: p.linked,
+        currencyId: tier.currencyId || '00000000-0000-0000-0000-000000000000',
+        gross: tier.gross,
+        net: tier.net,
+        linked: tier.linked,
       },
     ],
   }))
 
-  const payload: Record<string, unknown> = {
-    productId: entry.productId || '00000000-0000-0000-0000-000000000000',
-    price: priceArray,
-  }
+  // Top-level is an array of operations (sync-API-like structure)
+  const operations = [
+    {
+      action: entry.action,
+      payload: [payloadItem],
+    },
+  ]
 
-  if (entry.customerId) {
-    payload.customerId = entry.customerId
-  }
-  if (entry.customerGroupId) {
-    payload.customerGroupId = entry.customerGroupId
-  }
-  if (entry.ruleId) {
-    payload.ruleId = entry.ruleId
-  }
-
-  return JSON.stringify({ prices: [payload] }, null, 2)
+  return JSON.stringify(operations, null, 2)
 }
 
 export function defaultCustomPriceEntry(): CustomPriceEntry {
   return {
+    action: 'upsert',
     productId: '',
     customerId: '',
     customerGroupId: '',
     ruleId: '',
-    prices: [
+    priceTiers: [
       {
         quantityStart: 1,
         quantityEnd: null,

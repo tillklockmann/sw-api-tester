@@ -6,7 +6,6 @@ const shops = useShopsStore()
 const emit = defineEmits<{
   'add-shop': []
   'edit-shop': []
-  'delete-shop': []
 }>()
 
 function onSelect(event: Event) {
@@ -36,21 +35,13 @@ function onSelect(event: Event) {
       + Add
     </button>
 
-    <template v-if="shops.activeShop">
-      <button
-        class="px-1.5 py-1.5 text-[10px] rounded border border-border text-text-secondary hover:text-text-primary hover:border-accent transition-colors"
-        title="Edit Shop"
-        @click="emit('edit-shop')"
-      >
-        &#9998;
-      </button>
-      <button
-        class="px-1.5 py-1.5 text-[10px] rounded border border-border text-text-secondary hover:text-error hover:border-error transition-colors"
-        title="Delete Shop"
-        @click="emit('delete-shop')"
-      >
-        &#10005;
-      </button>
-    </template>
+    <button
+      v-if="shops.activeShop"
+      class="px-1.5 py-1.5 text-[10px] rounded border border-border text-text-secondary hover:text-text-primary hover:border-accent transition-colors"
+      title="Edit Shop"
+      @click="emit('edit-shop')"
+    >
+      &#9998;
+    </button>
   </div>
 </template>
