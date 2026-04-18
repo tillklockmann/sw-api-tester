@@ -9,4 +9,22 @@ pinia.use(piniaPluginPersistedstate)
 
 const app = createApp(App)
 app.use(pinia)
-app.mount('#app')
+
+// Load file-based stores before mounting to avoid flash of empty state
+async function loadStores() {
+  const { useShopsStore } = await import('@/stores/shops')
+  const { useSavedRequestsStore } = await import('@/stores/saved-requests')
+  const { useHistoryStore } = await import('@/stores/history')
+  const { useConnectionStore } = await import('@/stores/connection')
+
+  await Promise.all([
+    useShopsStore().loadFromDisk(),
+    useSavedRequestsStore().loadFromDisk(),
+    useHistoryStore().loadFromDisk(),
+    useConnectionStore().loadFromDisk(),
+  ])
+}
+
+loadStores().finally(() => {
+  app.mount('#app')
+})

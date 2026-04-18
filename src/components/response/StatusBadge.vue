@@ -1,18 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { StatusCategory } from '@/types/request'
+import { getStatusCategory } from '@/types/request'
 
 const props = defineProps<{
   status: number
   statusText: string
 }>()
 
-const category = computed<StatusCategory>(() => {
+const category = computed(() => {
   if (props.status === 0) return 'error'
-  if (props.status >= 200 && props.status < 300) return '2xx'
-  if (props.status >= 300 && props.status < 400) return '3xx'
-  if (props.status >= 400 && props.status < 500) return '4xx'
-  return '5xx'
+  return getStatusCategory(props.status)
 })
 
 const colorClass = computed(() => {

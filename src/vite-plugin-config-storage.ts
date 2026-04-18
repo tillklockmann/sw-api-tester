@@ -3,9 +3,12 @@ import { join } from 'node:path'
 import type { Plugin } from 'vite'
 
 const CONFIG_DIR = '.api-tester'
+const MAX_BODY_SIZE = 1024 * 1024 // 1 MB
 const FILES: Record<string, string> = {
   shops: 'shops.json',
   'saved-requests': 'saved-requests.json',
+  history: 'history.json',
+  connection: 'connection.json',
 }
 
 export function configStoragePlugin(): Plugin {
@@ -20,7 +23,8 @@ export function configStoragePlugin(): Plugin {
       server.middlewares.use(async (req, res, next) => {
         if (!req.url?.startsWith('/__config/')) return next()
 
-        const key = req.url.replace('/__config/', '')
+        const pathname = new URL(req.url, 'http://localhost').pathname
+        const key = pathname.replace('/__config/', '')
         const filename = FILES[key]
         if (!filename) {
           res.statusCode = 404
@@ -38,16 +42,24 @@ export function configStoragePlugin(): Plugin {
             res.end(data)
           } catch {
             res.setHeader('Content-Type', 'application/json')
-            res.end('[]')
+            res.end('{}')
           }
           return
         }
 
         if (req.method === 'POST') {
           try {
+            let totalSize = 0
             const chunks: Buffer[] = []
             for await (const chunk of req) {
-              chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk)
+              const buf = typeof chunk === 'string' ? Buffer.from(chunk) : chunk
+              totalSize += buf.length
+              if (totalSize > MAX_BODY_SIZE) {
+                res.statusCode = 413
+                res.end(JSON.stringify({ error: 'Payload too large' }))
+                return
+              }
+              chunks.push(buf)
             }
             const body = Buffer.concat(chunks).toString('utf-8')
 

@@ -5,17 +5,9 @@ import ConnectionPanel from '@/components/connection/ConnectionPanel.vue'
 import RequestBuilder from '@/components/request/RequestBuilder.vue'
 import ResponsePanel from '@/components/response/ResponsePanel.vue'
 import HistoryPanel from '@/components/history/HistoryPanel.vue'
-import { useShopsStore } from '@/stores/shops'
-import { useSavedRequestsStore } from '@/stores/saved-requests'
 import { ref } from 'vue'
 
 const showHistory = ref(true)
-
-// Load file-based stores on startup
-const shopsStore = useShopsStore()
-const savedRequestsStore = useSavedRequestsStore()
-shopsStore.loadFromDisk()
-savedRequestsStore.loadFromDisk()
 </script>
 
 <template>
@@ -37,6 +29,7 @@ savedRequestsStore.loadFromDisk()
 
         <!-- Toggle history button -->
         <button
+          :aria-label="showHistory ? 'Hide history panel' : 'Show history panel'"
           class="absolute top-[88px] left-0 z-10 bg-bg-secondary border border-border rounded-r px-1 py-2 text-[10px] text-text-muted hover:text-text-primary"
           :class="showHistory ? 'left-[220px]' : 'left-0'"
           @click="showHistory = !showHistory"

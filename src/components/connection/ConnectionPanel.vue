@@ -51,6 +51,7 @@ function applyShopToConnection(shop: ShopInstance) {
   connection.clientId = shop.clientId
   connection.clientSecret = shop.clientSecret
   connection.accessKey = shop.accessKey
+  connection.saveToDisk()
 }
 
 // When the active shop changes via the selector, apply its config

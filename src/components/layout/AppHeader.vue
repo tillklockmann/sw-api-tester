@@ -15,7 +15,13 @@ function setApiMode(mode: ApiMode) {
   if (mode !== connection.apiMode) {
     connection.disconnect()
     connection.apiMode = mode
+    connection.saveToDisk()
   }
+}
+
+function setVersion(v: ShopwareVersion) {
+  connection.version = v
+  connection.saveToDisk()
 }
 </script>
 
@@ -52,7 +58,7 @@ function setApiMode(mode: ApiMode) {
               ? 'bg-accent text-white'
               : 'bg-bg-panel text-text-secondary hover:text-text-primary hover:bg-bg-hover'
           "
-          @click="connection.version = v"
+          @click="setVersion(v)"
         >
           v{{ v }}
         </button>

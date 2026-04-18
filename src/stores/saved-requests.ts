@@ -29,7 +29,11 @@ export const useSavedRequestsStore = defineStore('savedRequests', () => {
   }
 
   async function saveToDisk() {
-    await saveSavedRequests(requests.value)
+    try {
+      await saveSavedRequests(requests.value)
+    } catch (err) {
+      console.warn('Failed to save requests:', err)
+    }
   }
 
   async function addRequest(

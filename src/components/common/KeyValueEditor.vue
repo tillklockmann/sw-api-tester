@@ -1,13 +1,32 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+
+interface KeyValueItem {
+  key: string
+  value: string
+}
+
 const props = defineProps<{
-  modelValue: Array<{ key: string; value: string }>
+  modelValue: Array<KeyValueItem>
   keyPlaceholder?: string
   valuePlaceholder?: string
 }>()
 
 const emit = defineEmits<{
-  'update:modelValue': [value: Array<{ key: string; value: string }>]
+  'update:modelValue': [value: Array<KeyValueItem>]
 }>()
+
+let nextId = 0
+const itemIds = ref<number[]>(props.modelValue.map(() => nextId++))
+
+watch(() => props.modelValue.length, (newLen) => {
+  while (itemIds.value.length < newLen) {
+    itemIds.value.push(nextId++)
+  }
+  if (itemIds.value.length > newLen) {
+    itemIds.value = itemIds.value.slice(0, newLen)
+  }
+})
 
 function updateItem(index: number, field: 'key' | 'value', val: string) {
   const items = [...props.modelValue]
@@ -16,10 +35,12 @@ function updateItem(index: number, field: 'key' | 'value', val: string) {
 }
 
 function addItem() {
+  itemIds.value.push(nextId++)
   emit('update:modelValue', [...props.modelValue, { key: '', value: '' }])
 }
 
 function removeItem(index: number) {
+  itemIds.value.splice(index, 1)
   const items = props.modelValue.filter((_, i) => i !== index)
   emit('update:modelValue', items)
 }
@@ -29,7 +50,7 @@ function removeItem(index: number) {
   <div class="space-y-1">
     <div
       v-for="(item, index) in modelValue"
-      :key="index"
+      :key="itemIds[index]"
       class="flex gap-1 items-center"
     >
       <input

@@ -47,8 +47,18 @@ watch(
   },
 )
 
+const isValidUrl = (url: string) => {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 function handleSave() {
   if (!name.value.trim() || !baseUrl.value.trim()) return
+  if (!isValidUrl(baseUrl.value.trim())) return
 
   emit('save', {
     name: name.value.trim(),
@@ -92,6 +102,9 @@ const inputClass =
           placeholder="https://your-shop.example.com"
           :class="inputClass"
         />
+        <span v-if="baseUrl.trim() && !isValidUrl(baseUrl.trim())" class="text-error text-[10px] mt-0.5 block">
+          Must be a valid URL starting with http:// or https://
+        </span>
       </div>
 
       <div>
@@ -176,7 +189,7 @@ const inputClass =
       </button>
       <button
         class="px-4 py-1.5 text-xs rounded font-medium bg-accent text-white hover:bg-accent-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        :disabled="!name.trim() || !baseUrl.trim()"
+        :disabled="!name.trim() || !baseUrl.trim() || !isValidUrl(baseUrl.trim())"
         @click="handleSave"
       >
         {{ shop ? 'Update' : 'Add Shop' }}

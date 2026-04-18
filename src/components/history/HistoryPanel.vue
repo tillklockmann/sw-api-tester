@@ -36,6 +36,7 @@ function selectEntry(entry: HistoryEntryType) {
       <span class="text-xs font-semibold text-text-secondary">History</span>
       <button
         v-if="history.entries.length > 0"
+        aria-label="Clear history"
         class="text-[10px] text-text-muted hover:text-error"
         @click="history.clearHistory()"
       >

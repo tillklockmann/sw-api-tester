@@ -44,12 +44,22 @@ watch([entity, action], () => {
       <!-- Entity search -->
       <div class="flex-1">
         <label class="text-[10px] text-text-muted block mb-1">Entity</label>
-        <input
-          v-model="entityFilter"
-          type="text"
-          placeholder="Search entity..."
-          class="w-full bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono"
-        />
+        <div class="relative">
+          <input
+            v-model="entityFilter"
+            type="text"
+            placeholder="Search entity..."
+            class="w-full bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono pr-7"
+            @focus="if (entity) { entity = ''; entityFilter = '' }"
+          />
+          <button
+            v-if="entity"
+            class="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary text-xs"
+            @click="entity = ''; entityFilter = ''"
+          >
+            x
+          </button>
+        </div>
         <div
           v-if="entityFilter && filteredEntities.length > 0 && !entity"
           class="mt-1 max-h-[200px] overflow-auto border border-border rounded bg-bg-secondary"

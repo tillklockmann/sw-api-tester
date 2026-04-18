@@ -79,8 +79,8 @@ watch(selectedPath, (path) => {
     request.method = methods[0]
   }
 
-  // Generate template body for POST/PUT/PATCH
-  if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
+  // Generate template body for POST/PUT/PATCH if body is empty
+  if (['POST', 'PUT', 'PATCH'].includes(request.method) && !request.body?.trim()) {
     const template = openapi.getTemplateForEndpoint(path, request.method)
     if (template) {
       request.body = template
@@ -88,9 +88,10 @@ watch(selectedPath, (path) => {
   }
 })
 
-// When method changes, update template too
+// When method changes, update template only if body is empty
 watch(() => request.method, (method) => {
   if (!request.path || !['POST', 'PUT', 'PATCH'].includes(method)) return
+  if (request.body?.trim()) return
   const template = openapi.getTemplateForEndpoint(request.path, method)
   if (template) {
     request.body = template

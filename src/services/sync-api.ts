@@ -1,5 +1,6 @@
 import type { OpenApiSpec } from '@/types/openapi'
 import { generateTemplateJson } from './schema-template'
+import { toSnakeCase } from '@/utils/string'
 
 export function buildSyncPayload(
   spec: OpenApiSpec | null,
@@ -48,12 +49,3 @@ function entityToSchemaName(entity: string): string {
     .join('')
 }
 
-function toSnakeCase(name: string): string {
-  // If already snake_case, return as-is
-  if (name.includes('_')) return name
-  // Convert PascalCase to snake_case
-  return name
-    .replace(/([A-Z])/g, '_$1')
-    .toLowerCase()
-    .replace(/^_/, '')
-}

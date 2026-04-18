@@ -1,13 +1,14 @@
 import type { ShopInstance } from '@/types/shop'
 import type { SavedRequest } from '@/types/saved-request'
+import type { HistoryEntry } from '@/types/request'
 
-async function load<T>(key: string): Promise<T[]> {
+async function loadArray<T>(key: string): Promise<T[]> {
   const res = await fetch(`/__config/${key}`)
   if (!res.ok) throw new Error(`Failed to load ${key}`)
   return res.json()
 }
 
-async function save<T>(key: string, data: T[]): Promise<void> {
+async function saveData(key: string, data: unknown): Promise<void> {
   const res = await fetch(`/__config/${key}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -17,17 +18,35 @@ async function save<T>(key: string, data: T[]): Promise<void> {
 }
 
 export function loadShops(): Promise<ShopInstance[]> {
-  return load<ShopInstance>('shops')
+  return loadArray<ShopInstance>('shops')
 }
 
 export function saveShops(shops: ShopInstance[]): Promise<void> {
-  return save('shops', shops)
+  return saveData('shops', shops)
 }
 
 export function loadSavedRequests(): Promise<SavedRequest[]> {
-  return load<SavedRequest>('saved-requests')
+  return loadArray<SavedRequest>('saved-requests')
 }
 
 export function saveSavedRequests(requests: SavedRequest[]): Promise<void> {
-  return save('saved-requests', requests)
+  return saveData('saved-requests', requests)
+}
+
+export function loadHistory(): Promise<HistoryEntry[]> {
+  return loadArray<HistoryEntry>('history')
+}
+
+export function saveHistory(entries: HistoryEntry[]): Promise<void> {
+  return saveData('history', entries)
+}
+
+export async function loadConfig<T extends Record<string, unknown>>(key: string): Promise<T> {
+  const res = await fetch(`/__config/${key}`)
+  if (!res.ok) throw new Error(`Failed to load ${key}`)
+  return res.json()
+}
+
+export function saveConfig(key: string, data: Record<string, unknown>): Promise<void> {
+  return saveData(key, data)
 }

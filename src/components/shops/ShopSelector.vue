@@ -17,6 +17,7 @@ function onSelect(event: Event) {
 <template>
   <div class="flex items-center gap-1.5">
     <select
+      aria-label="Select shop"
       class="bg-bg-input text-text-primary text-xs px-2 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono min-w-[140px]"
       :value="shops.activeShopId ?? '__manual__'"
       @change="onSelect"

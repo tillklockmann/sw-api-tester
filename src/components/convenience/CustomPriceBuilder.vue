@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { reactive, watch, nextTick } from 'vue'
 import { useRequestStore } from '@/stores/request'
 import { buildCustomPricePayload, defaultCustomPriceEntry } from '@/services/custom-price'
 import type { CustomPriceAction, CustomPriceTier } from '@/services/custom-price'
@@ -34,7 +34,7 @@ function apply() {
   request.path = '/_action/custom-price'
   request.method = 'POST'
   request.body = buildCustomPricePayload(entry)
-  syncing = false
+  nextTick(() => { syncing = false })
 }
 
 // Sync entry → body
@@ -77,7 +77,7 @@ watch(
           }
         })
       }
-      syncing = false
+      nextTick(() => { syncing = false })
     } catch {
       // Body is not valid custom price JSON — ignore
     }

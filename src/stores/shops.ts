@@ -24,7 +24,11 @@ export const useShopsStore = defineStore(
     }
 
     async function saveToDisk() {
-      await saveShops(shops.value)
+      try {
+        await saveShops(shops.value)
+      } catch (err) {
+        console.warn('Failed to save shops:', err)
+      }
     }
 
     async function addShop(

@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useOpenApiStore } from '@/stores/openapi'
 import { useRequestStore } from '@/stores/request'
+import { toSnakeCase } from '@/utils/string'
 
 const openapi = useOpenApiStore()
 const request = useRequestStore()
@@ -21,29 +22,26 @@ watch(
   { immediate: true },
 )
 
-const defaultCriteria = {
-  limit: 25,
-  page: 1,
-  filter: [
-    { type: 'equals', field: '', value: '' },
-  ],
-  sort: [
-    { field: '', order: 'ASC' },
-  ],
-  associations: {},
-  includes: {},
+function getDefaultCriteria() {
+  return {
+    limit: 25,
+    page: 1,
+    filter: [
+      { type: 'equals', field: '', value: '' },
+    ],
+    sort: [
+      { field: '', order: 'ASC' },
+    ],
+    associations: {},
+    includes: {},
+  }
 }
 
 function apply() {
   if (!entity.value) return
-  const snakeName = entity.value
-    .replace(/([A-Z])/g, '_$1')
-    .toLowerCase()
-    .replace(/^_/, '')
-    .replace(/_+/g, '_')
-  request.path = `/search/${snakeName}`
+  request.path = `/search/${toSnakeCase(entity.value)}`
   request.method = 'POST'
-  request.body = JSON.stringify(defaultCriteria, null, 2)
+  request.body = JSON.stringify(getDefaultCriteria(), null, 2)
 }
 
 watch(entity, () => {
@@ -57,12 +55,22 @@ watch(entity, () => {
 
     <div>
       <label class="text-[10px] text-text-muted block mb-1">Entity to search</label>
-      <input
-        v-model="entityFilter"
-        type="text"
-        placeholder="Search entity..."
-        class="w-full bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono"
-      />
+      <div class="relative">
+        <input
+          v-model="entityFilter"
+          type="text"
+          placeholder="Search entity..."
+          class="w-full bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono pr-7"
+          @focus="if (entity) { entity = ''; entityFilter = '' }"
+        />
+        <button
+          v-if="entity"
+          class="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary text-xs"
+          @click="entity = ''; entityFilter = ''"
+        >
+          x
+        </button>
+      </div>
       <div
         v-if="entityFilter && filteredEntities.length > 0 && !entity"
         class="mt-1 max-h-[200px] overflow-auto border border-border rounded bg-bg-secondary"
@@ -79,7 +87,7 @@ watch(entity, () => {
     </div>
 
     <div v-if="entity" class="text-[10px] text-text-muted">
-      Endpoint: <span class="text-accent">POST /search/{{ entity.replace(/([A-Z])/g, '_$1').toLowerCase().replace(/^_/, '').replace(/_+/g, '_') }}</span>
+      Endpoint: <span class="text-accent">POST /search/{{ toSnakeCase(entity) }}</span>
     </div>
 
     <div class="text-[10px] text-text-muted leading-relaxed">

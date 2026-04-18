@@ -14,4 +14,7 @@ export default defineConfig({
   json: {
     stringify: true,
   },
+  test: {
+    globals: true,
+  },
 })
