@@ -7,6 +7,7 @@ import { useHistoryStore } from '@/stores/history'
 import { useShopsStore } from '@/stores/shops'
 import { useSavedRequestsStore } from '@/stores/saved-requests'
 import { executeRequest } from '@/services/api'
+import { useOpenApiStore } from '@/stores/openapi'
 import EndpointSelector from './EndpointSelector.vue'
 import MethodSelector from './MethodSelector.vue'
 import SendButton from './SendButton.vue'
@@ -25,6 +26,7 @@ const connection = useConnectionStore()
 const response = useResponseStore()
 const history = useHistoryStore()
 const shops = useShopsStore()
+const openapi = useOpenApiStore()
 const savedRequests = useSavedRequestsStore()
 
 const requestTabs = ['Body', 'Headers', 'Params', 'Sync', 'Search', 'Custom Price']
@@ -109,6 +111,12 @@ function handleLoadRequest(saved: SavedRequest) {
     : []
 }
 
+function loadSchema(requiredOnly: boolean) {
+  if (!request.path) return
+  const template = openapi.getTemplateForEndpoint(request.path, request.method, { requiredOnly })
+  if (template) request.body = template
+}
+
 function onKeydown(e: KeyboardEvent) {
   if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
     e.preventDefault()
@@ -149,8 +157,25 @@ function onKeydown(e: KeyboardEvent) {
     <TabBar :tabs="requestTabs" :active-tab="activeTab" @update:active-tab="activeTab = $event" />
 
     <div class="flex-1 overflow-auto">
-      <div v-show="activeTab === 'Body'" class="h-full">
-        <JsonEditor v-model="request.body" placeholder="Request body (JSON)..." />
+      <div v-show="activeTab === 'Body'" class="h-full flex flex-col">
+        <div v-if="request.path && ['POST', 'PUT', 'PATCH'].includes(request.method)" class="flex items-center gap-1.5 px-3 py-1.5 border-b border-border">
+          <span class="text-[10px] text-text-muted">Load schema:</span>
+          <button
+            class="px-2 py-0.5 text-[10px] rounded border border-border text-text-secondary hover:text-text-primary hover:border-accent transition-colors"
+            @click="loadSchema(false)"
+          >
+            All fields
+          </button>
+          <button
+            class="px-2 py-0.5 text-[10px] rounded border border-border text-text-secondary hover:text-text-primary hover:border-accent transition-colors"
+            @click="loadSchema(true)"
+          >
+            Required only
+          </button>
+        </div>
+        <div class="flex-1 min-h-0">
+          <JsonEditor v-model="request.body" placeholder="Request body (JSON)..." />
+        </div>
       </div>
       <div v-show="activeTab === 'Headers'" class="p-3">
         <KeyValueEditor

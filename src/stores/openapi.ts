@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useConnectionStore } from './connection'
 import { loadSummary, loadFullSpec } from '@/services/openapi-loader'
 import { extractEndpoints, getMethodsForPath, getEndpointDetail, getEntityNames } from '@/services/openapi-parser'
-import { generateTemplateJson } from '@/services/schema-template'
+import { generateTemplateJson, type TemplateOptions } from '@/services/schema-template'
 import type { OpenApiSpec, EndpointInfo } from '@/types/openapi'
 import type { HttpMethod } from '@/types/shopware'
 
@@ -42,11 +42,11 @@ export const useOpenApiStore = defineStore('openapi', () => {
     return getMethodsForPath(fullSpec.value, path)
   }
 
-  function getTemplateForEndpoint(path: string, method: string): string {
+  function getTemplateForEndpoint(path: string, method: string, options: TemplateOptions = {}): string {
     if (!fullSpec.value) return ''
     const detail = getEndpointDetail(fullSpec.value, path, method)
     if (!detail?.requestBodySchema) return ''
-    return generateTemplateJson(fullSpec.value, detail.requestBodySchema)
+    return generateTemplateJson(fullSpec.value, detail.requestBodySchema, options)
   }
 
   function getEndpointSummary(path: string, method: string): string {
