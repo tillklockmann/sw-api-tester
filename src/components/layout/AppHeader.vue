@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useConnectionStore } from '@/stores/connection'
 import type { ApiMode, ShopwareVersion } from '@/types/shopware'
+import UuidGeneratorModal from '@/components/common/UuidGeneratorModal.vue'
 
 const connection = useConnectionStore()
+const showUuidModal = ref(false)
 
 const apiModes: { value: ApiMode; label: string }[] = [
   { value: 'admin', label: 'Admin API' },
@@ -71,5 +74,17 @@ function setVersion(v: ShopwareVersion) {
         </button>
       </div>
     </div>
+
+    <!-- Right side tools -->
+    <div class="flex items-center gap-2">
+      <button
+        class="px-2.5 py-1 text-xs rounded border border-border text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors font-mono"
+        @click="showUuidModal = true"
+      >
+        UUID
+      </button>
+    </div>
+
+    <UuidGeneratorModal :open="showUuidModal" @close="showUuidModal = false" />
   </header>
 </template>
