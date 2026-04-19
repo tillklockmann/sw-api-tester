@@ -84,9 +84,4 @@ export const useShopsStore = defineStore(
       setActiveShop,
     }
   },
-  {
-    persist: {
-      pick: ['activeShopId'],
-    },
-  },
 )

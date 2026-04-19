@@ -16,7 +16,6 @@ import TabBar from '@/components/common/TabBar.vue'
 import KeyValueEditor from '@/components/common/KeyValueEditor.vue'
 import SyncApiBuilder from '@/components/convenience/SyncApiBuilder.vue'
 import SearchCriteriaBuilder from '@/components/convenience/SearchCriteriaBuilder.vue'
-import CustomPriceBuilder from '@/components/convenience/CustomPriceBuilder.vue'
 import SaveRequestModal from '@/components/saved/SaveRequestModal.vue'
 import SavedRequestsPanel from '@/components/saved/SavedRequestsPanel.vue'
 import type { SavedRequest } from '@/types/saved-request'
@@ -29,7 +28,20 @@ const shops = useShopsStore()
 const openapi = useOpenApiStore()
 const savedRequests = useSavedRequestsStore()
 
-const requestTabs = ['Body', 'Headers', 'Params', 'Sync', 'Search', 'Custom Price']
+type EndpointGroup = 'all' | 'crud' | 'search' | 'aggregate' | 'sync' | 'action' | 'custom'
+
+const endpointGroups: { value: EndpointGroup; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'crud', label: 'Entity CRUD' },
+  { value: 'search', label: 'Search' },
+  { value: 'aggregate', label: 'Aggregate' },
+  { value: 'sync', label: 'Sync' },
+  { value: 'action', label: 'Actions' },
+  { value: 'custom', label: 'Custom Path' },
+]
+
+const activeGroup = ref<EndpointGroup>('all')
+const requestTabs = ['Body', 'Headers', 'Params']
 const activeTab = ref('Body')
 const showSaveModal = ref(false)
 
@@ -127,19 +139,56 @@ function onKeydown(e: KeyboardEvent) {
 
 <template>
   <div class="flex flex-col h-full" @keydown="onKeydown">
-    <!-- URL bar -->
+    <!-- Endpoint group selector -->
+    <div class="flex gap-0 border-b border-border">
+      <button
+        v-for="group in endpointGroups"
+        :key="group.value"
+        class="px-3 py-1.5 text-xs transition-colors border-b-2"
+        :class="
+          activeGroup === group.value
+            ? 'text-text-primary border-accent bg-bg-panel'
+            : 'text-text-secondary border-transparent hover:text-text-primary hover:bg-bg-hover'
+        "
+        @click="activeGroup = group.value"
+      >
+        {{ group.label }}
+      </button>
+    </div>
+
+    <!-- Endpoint selector row -->
     <div class="flex items-center gap-2 p-3 border-b border-border">
       <MethodSelector v-model="request.method" />
-      <EndpointSelector />
-      <span class="text-text-muted text-xs">or</span>
+
+      <!-- All: full endpoint autocomplete -->
+      <EndpointSelector v-if="activeGroup === 'all'" />
+
+      <!-- Entity CRUD: filtered to crud group -->
+      <EndpointSelector v-else-if="activeGroup === 'crud'" group-filter="crud" />
+
+      <!-- Search: entity picker -->
+      <SearchCriteriaBuilder v-else-if="activeGroup === 'search'" />
+
+      <!-- Aggregate: filtered to aggregate group -->
+      <EndpointSelector v-else-if="activeGroup === 'aggregate'" group-filter="aggregate" />
+
+      <!-- Sync: entity + action picker -->
+      <SyncApiBuilder v-else-if="activeGroup === 'sync'" />
+
+      <!-- Actions: filtered to action group -->
+      <EndpointSelector v-else-if="activeGroup === 'action'" group-filter="action" />
+
+      <!-- Custom Path: free-text input -->
       <input
+        v-else-if="activeGroup === 'custom'"
         v-model="request.path"
         type="text"
         placeholder="/custom/path"
-        class="w-[200px] bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono"
+        class="flex-1 bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono"
         @keydown.enter.meta="send"
         @keydown.enter.ctrl="send"
       />
+
       <SavedRequestsPanel @select="handleLoadRequest" />
       <div class="flex items-center gap-1">
         <SendButton :loading="request.isLoading" @send="send" />
@@ -190,15 +239,6 @@ function onKeydown(e: KeyboardEvent) {
           key-placeholder="Parameter"
           value-placeholder="Value"
         />
-      </div>
-      <div v-show="activeTab === 'Sync'">
-        <SyncApiBuilder />
-      </div>
-      <div v-show="activeTab === 'Search'">
-        <SearchCriteriaBuilder />
-      </div>
-      <div v-show="activeTab === 'Custom Price'">
-        <CustomPriceBuilder />
       </div>
     </div>
 

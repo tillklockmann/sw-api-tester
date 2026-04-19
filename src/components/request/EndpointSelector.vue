@@ -11,6 +11,10 @@ import { useOpenApiStore } from '@/stores/openapi'
 import { useRequestStore } from '@/stores/request'
 import { classifyPath } from '@/services/openapi-parser'
 
+const props = defineProps<{
+  groupFilter?: string
+}>()
+
 const openapi = useOpenApiStore()
 const request = useRequestStore()
 
@@ -33,6 +37,7 @@ const groupOrder = ['crud', 'search', 'aggregate', 'action', 'other']
 
 const filteredOptions = computed(() => {
   const q = query.value.toLowerCase()
+  const gf = props.groupFilter
   // Use full spec endpoints if loaded, otherwise summary paths
   let paths: PathOption[]
 
@@ -42,8 +47,18 @@ const filteredOptions = computed(() => {
     paths = openapi.summaryPaths.map((p) => ({ path: p, group: classifyPath(p) }))
   }
 
+  // Filter by group if specified
+  if (gf) {
+    paths = paths.filter((p) => p.group === gf)
+  }
+
   if (q) {
     paths = paths.filter((p) => p.path.toLowerCase().includes(q))
+  }
+
+  // If filtering to a single group, skip group headers
+  if (gf) {
+    return paths.slice(0, q ? 50 : 40).map((p) => ({ type: 'option' as const, path: p.path }))
   }
 
   // Group and limit

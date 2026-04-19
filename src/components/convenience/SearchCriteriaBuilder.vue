@@ -50,48 +50,35 @@ watch(entity, () => {
 </script>
 
 <template>
-  <div class="p-3 space-y-3">
-    <div class="text-xs text-text-secondary font-semibold">Search Criteria Builder</div>
-
-    <div>
-      <label class="text-[10px] text-text-muted block mb-1">Entity to search</label>
-      <div class="relative">
-        <input
-          v-model="entityFilter"
-          type="text"
-          placeholder="Search entity..."
-          class="w-full bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono pr-7"
-          @focus="if (entity) { entity = ''; entityFilter = '' }"
-        />
-        <button
-          v-if="entity"
-          class="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary text-xs"
-          @click="entity = ''; entityFilter = ''"
-        >
-          x
-        </button>
-      </div>
-      <div
-        v-if="entityFilter && filteredEntities.length > 0 && !entity"
-        class="mt-1 max-h-[200px] overflow-auto border border-border rounded bg-bg-secondary"
+  <div class="flex-1 relative">
+    <div class="relative">
+      <input
+        v-model="entityFilter"
+        type="text"
+        placeholder="Search entity..."
+        class="w-full bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono pr-7"
+        @focus="if (entity) { entity = ''; entityFilter = '' }"
+      />
+      <button
+        v-if="entity"
+        class="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary text-xs"
+        @click="entity = ''; entityFilter = ''"
       >
-        <button
-          v-for="name in filteredEntities"
-          :key="name"
-          class="w-full text-left px-3 py-1 text-xs font-mono hover:bg-bg-hover text-text-secondary hover:text-text-primary"
-          @click="entity = name; entityFilter = name"
-        >
-          {{ name }}
-        </button>
-      </div>
+        x
+      </button>
     </div>
-
-    <div v-if="entity" class="text-[10px] text-text-muted">
-      Endpoint: <span class="text-accent">POST /search/{{ toSnakeCase(entity) }}</span>
-    </div>
-
-    <div class="text-[10px] text-text-muted leading-relaxed">
-      Available filter types: <span class="text-text-secondary">equals, equalsAny, contains, range, not, multi, prefix, suffix</span>
+    <div
+      v-if="entityFilter && filteredEntities.length > 0 && !entity"
+      class="absolute z-50 mt-1 max-h-[300px] w-full overflow-auto border border-border rounded bg-bg-secondary shadow-lg"
+    >
+      <button
+        v-for="name in filteredEntities"
+        :key="name"
+        class="w-full text-left px-3 py-1.5 text-xs font-mono hover:bg-bg-hover text-text-secondary hover:text-text-primary"
+        @click="entity = name; entityFilter = name"
+      >
+        {{ name }}
+      </button>
     </div>
   </div>
 </template>

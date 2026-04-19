@@ -37,69 +37,55 @@ watch([entity, action], () => {
 </script>
 
 <template>
-  <div class="p-3 space-y-3">
-    <div class="text-xs text-text-secondary font-semibold">Sync API Builder</div>
-
-    <div class="flex gap-2 items-end">
-      <!-- Entity search -->
-      <div class="flex-1">
-        <label class="text-[10px] text-text-muted block mb-1">Entity</label>
-        <div class="relative">
-          <input
-            v-model="entityFilter"
-            type="text"
-            placeholder="Search entity..."
-            class="w-full bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono pr-7"
-            @focus="if (entity) { entity = ''; entityFilter = '' }"
-          />
-          <button
-            v-if="entity"
-            class="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary text-xs"
-            @click="entity = ''; entityFilter = ''"
-          >
-            x
-          </button>
-        </div>
-        <div
-          v-if="entityFilter && filteredEntities.length > 0 && !entity"
-          class="mt-1 max-h-[200px] overflow-auto border border-border rounded bg-bg-secondary"
+  <div class="flex-1 flex gap-2 items-center">
+    <!-- Entity search -->
+    <div class="flex-1 relative">
+      <div class="relative">
+        <input
+          v-model="entityFilter"
+          type="text"
+          placeholder="Search entity..."
+          class="w-full bg-bg-input text-text-primary text-xs px-3 py-1.5 rounded border border-border focus:border-accent focus:outline-none font-mono pr-7"
+          @focus="if (entity) { entity = ''; entityFilter = '' }"
+        />
+        <button
+          v-if="entity"
+          class="absolute right-1.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary text-xs"
+          @click="entity = ''; entityFilter = ''"
         >
-          <button
-            v-for="name in filteredEntities"
-            :key="name"
-            class="w-full text-left px-3 py-1 text-xs font-mono hover:bg-bg-hover text-text-secondary hover:text-text-primary"
-            @click="entity = name; entityFilter = name"
-          >
-            {{ name }}
-          </button>
-        </div>
+          x
+        </button>
       </div>
-
-      <!-- Action -->
-      <div>
-        <label class="text-[10px] text-text-muted block mb-1">Action</label>
-        <div class="flex rounded overflow-hidden border border-border">
-          <button
-            v-for="a in (['upsert', 'delete'] as const)"
-            :key="a"
-            class="px-3 py-1.5 text-xs transition-colors"
-            :class="
-              action === a
-                ? 'bg-accent text-white'
-                : 'bg-bg-panel text-text-secondary hover:text-text-primary hover:bg-bg-hover'
-            "
-            @click="action = a"
-          >
-            {{ a }}
-          </button>
-        </div>
+      <div
+        v-if="entityFilter && filteredEntities.length > 0 && !entity"
+        class="absolute z-50 mt-1 max-h-[300px] w-full overflow-auto border border-border rounded bg-bg-secondary shadow-lg"
+      >
+        <button
+          v-for="name in filteredEntities"
+          :key="name"
+          class="w-full text-left px-3 py-1.5 text-xs font-mono hover:bg-bg-hover text-text-secondary hover:text-text-primary"
+          @click="entity = name; entityFilter = name"
+        >
+          {{ name }}
+        </button>
       </div>
     </div>
 
-    <div v-if="entity" class="text-[10px] text-text-muted">
-      Endpoint: <span class="text-accent">POST /_action/sync</span>
-      &nbsp;|&nbsp; Entity: <span class="text-text-primary">{{ entity }}</span>
-      &nbsp;|&nbsp; Action: <span class="text-text-primary">{{ action }}</span>
+    <!-- Action toggle -->
+    <div class="flex rounded overflow-hidden border border-border">
+      <button
+        v-for="a in (['upsert', 'delete'] as const)"
+        :key="a"
+        class="px-3 py-1.5 text-xs transition-colors"
+        :class="
+          action === a
+            ? 'bg-accent text-white'
+            : 'bg-bg-panel text-text-secondary hover:text-text-primary hover:bg-bg-hover'
+        "
+        @click="action = a"
+      >
+        {{ a }}
+      </button>
     </div>
   </div>
 </template>
