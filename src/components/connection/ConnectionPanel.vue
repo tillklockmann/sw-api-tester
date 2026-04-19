@@ -75,36 +75,35 @@ watch(
         @edit-shop="openEditShop"
       />
 
-      <div class="w-px h-5 bg-border" />
+      <template v-if="shops.activeShop">
+        <div class="w-px h-5 bg-border" />
 
-      <!-- Base URL (read-only display) -->
-      <span v-if="connection.baseUrl" class="text-xs text-text-secondary font-mono truncate max-w-[400px]" :title="connection.baseUrl">
-        {{ connection.baseUrl }}
-      </span>
-      <span v-else class="text-xs text-text-muted italic">
-        No shop selected
-      </span>
+        <!-- Base URL (read-only display) -->
+        <span class="text-xs text-text-secondary font-mono truncate max-w-[400px]" :title="connection.baseUrl">
+          {{ connection.baseUrl }}
+        </span>
 
-      <!-- Connect/Disconnect button (Admin API) -->
-      <template v-if="connection.apiMode === 'admin' && connection.clientId">
-        <button
-          class="px-4 py-1.5 text-xs rounded font-medium transition-colors"
-          :class="
-            connection.isConnected
-              ? 'bg-error/20 text-error hover:bg-error/30'
-              : 'bg-accent text-white hover:bg-accent-hover'
-          "
-          :disabled="connection.isConnecting"
-          @click="connection.isConnected ? connection.disconnect() : connection.connect()"
-        >
-          {{
-            connection.isConnecting
-              ? 'Connecting...'
-              : connection.isConnected
-                ? 'Disconnect'
-                : 'Connect'
-          }}
-        </button>
+        <!-- Connect/Disconnect button (Admin API) -->
+        <template v-if="connection.apiMode === 'admin' && connection.clientId">
+          <button
+            class="px-4 py-1.5 text-xs rounded font-medium transition-colors"
+            :class="
+              connection.isConnected
+                ? 'bg-error/20 text-error hover:bg-error/30'
+                : 'bg-accent text-white hover:bg-accent-hover'
+            "
+            :disabled="connection.isConnecting"
+            @click="connection.isConnected ? connection.disconnect() : connection.connect()"
+          >
+            {{
+              connection.isConnecting
+                ? 'Connecting...'
+                : connection.isConnected
+                  ? 'Disconnect'
+                  : 'Connect'
+            }}
+          </button>
+        </template>
       </template>
 
       <ConnectionStatus class="ml-auto" />
